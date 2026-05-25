@@ -3,8 +3,8 @@ close all
 
 addpath("chebfun");
 
-x_restricted0=0;
-x_restricted1=1;
+x_restricted0=2;
+x_restricted1=3;
 x_broad0=-1;
 x_broad1=2;
 n_restricted=1e5;
@@ -14,12 +14,12 @@ x_sample=linspace(x_restricted0,x_restricted1, n_restricted);
 x_broad=linspace(x_broad0,x_broad1,n_broad);
 
 syms z;
-f_sym= sin(z);
+f_sym= -sqrt(z^2-1)-z;
 f_num=matlabFunction(f_sym);
 f_sample=f_num(x_sample);
 
 
-[r,pol,res,zer,wj,zj,fj]=aaa(f_sample, x_sample,'tol',0,'mmax',100);
+[r,pol,res,zer,zj,fj,wj]=aaa(f_sample, x_sample,'tol',0,'mmax',100); 
 
 l=length(wj);
 vec=sym.empty(0,l);
@@ -33,24 +33,47 @@ for j=1:l
  vec(j)=wj(j)*term;
 end
 
-Q=sum(vec);
+aaa_Q=sum(vec);
 for j=1:l
     vec(j)=vec(j)*fj(j);
 end
-P=sum(vec);
+aaa_P=sum(vec);
 
-aaa_P=coeffs(P,z);
-aaa_Q=coeffs(Q,z);
-normalizing=aaa_Q(length(aaa_Q));
+[aaa_P,aaa_Q]=numden(simplifyFraction(aaa_P/aaa_Q));
+
+cf=coeffs(aaa_Q,z);
+normalizing=cf(length(cf));
 aaa_P=aaa_P/normalizing;
 aaa_Q=aaa_Q/normalizing;
 
-N=length(aaa_P)-1;
-
 [pade_P,pade_Q]=multipoint_pade(fj,zj);
+
+% ===============================
+% ==== Symbolic Polynomials =====
+% ===============================
+diff=(pade_P*aaa_Q)-(aaa_P*pade_Q);
+
+% ===============================
+% ===== Symbolic Coefficients ===
+% ===============================
+
+pade_P=coeffs(pade_P);
+pade_Q=coeffs(pade_Q);
+aaa_P=coeffs(aaa_P);
+aaa_Q=coeffs(aaa_Q);
 m=max([length(pade_P),length(pade_Q),length(aaa_P),length(aaa_Q)]);
-pade_P=paddata(pade_P,m,Side='leading')
-pade_Q=paddata(pade_Q,m,Side='leading')
-aaa_P=paddata(aaa_P,m,Side='leading')
-aaa_Q=paddata(aaa_Q,m,Side='leading')
+pade_P=paddata(pade_P,m,Side='leading');
+pade_Q=paddata(pade_Q,m,Side='leading');
+aaa_P=paddata(aaa_P,m,Side='leading');
+aaa_Q=paddata(aaa_Q,m,Side='leading');
+
+% ==========================================
+% ==== Numerical Coefficients ==============
+% ==========================================
+
+pade_P=vpa(pade_P)
+pade_Q=vpa(pade_Q)
+aaa_P=vpa(aaa_P)
+aaa_Q=vpa(aaa_Q)
+
 
