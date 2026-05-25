@@ -1,5 +1,5 @@
 function [num, den] = multipoint_pade(f_sample,x_sample)
-    syms x;
+    syms z;
     n = length(x_sample);
     g = zeros(n, n);
     g(1,:) = f_sample;
@@ -17,14 +17,13 @@ function [num, den] = multipoint_pade(f_sample,x_sample)
 
     f=sym(1);
     for i=1:n-1
-        f=a(n-i+1)*(x-x_sample(n-i))/f;
+        f=a(n-i+1)*(z-x_sample(n-i))/f;
         f=f+1;
     end
     f=a(1)/f;
     [P,Q]=numden(simplifyFraction(f));
-    P=coeffs(P,'all');
-    Q=coeffs(Q,'all');
-    normalizing=Q(length(Q));
+    cf=coeffs(Q,'all');
+    normalizing=cf(length(cf));
     num=P/normalizing;
     den=Q/normalizing;
 end
